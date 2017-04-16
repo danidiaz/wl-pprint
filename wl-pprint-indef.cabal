@@ -13,12 +13,21 @@ Author:              Daan Leijen
 Maintainer:          Noam Lewis <jones.noamle@gmail.com> 
 Build-Type:          Simple
 
-Library
+Executable           wl-pprint-string-example
+  Main-is:           Main.hs
+  Hs-Source-Dirs:    example-string
+  Other-Modules:     StringImpl
   Build-Depends:     base < 5,
-                     str-sig >= 0.1.0.0
-  Mixins:            str-sig requires (Str as Text.PrettyPrint.Leijen.Str)
+                     str-string >= 0.1.0.0,
+                     wl-pprint-indef
+  Mixins:            wl-pprint-indef requires (Text.PrettyPrint.Leijen.Str as StringImpl)
+                        
+Library
   Exposed-Modules:   Text.PrettyPrint.Leijen
   Signatures:        Text.PrettyPrint.Leijen.Str
+  Mixins:            str-sig requires (Str as Text.PrettyPrint.Leijen.Str)
+  Build-Depends:     base < 5,
+                     str-sig >= 0.1.0.0
 
 source-repository head
   type: git
