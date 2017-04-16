@@ -1,4 +1,5 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Text.PrettyPrint.Leijen
@@ -112,11 +113,13 @@ module Text.PrettyPrint.Leijen (
 
         ) where
 
-import System.IO (Handle,hPutStr,hPutChar,stdout)
+import Data.String(fromString)
+import System.IO (Handle,hPutChar,stdout)
 
-#if MIN_VERSION_base(4,8,0)
 import Prelude hiding ((<$>))
-#endif
+
+import Text.PrettyPrint.Leijen.Str(Str)
+import qualified Text.PrettyPrint.Leijen.Str as Str
 
 infixr 5 </>,<//>,<$>,<$$>
 infixr 6 <>,<+>
@@ -458,39 +461,42 @@ equals          = char '='
 -- using @line@ for newline characters and @char@ for all other
 -- characters. It is used instead of 'text' whenever the text contains
 -- newline characters.
-string :: String -> Doc
-string ""       = empty
-string ('\n':s) = line <> string s
-string s        = case (span (/='\n') s) of
-                    (xs,ys) -> text xs <> string ys
+string :: Str -> Doc
+string s | Str.null s = 
+    empty
+string (Str.uncons -> Just ('\n',s)) = 
+    line <> string s
+string s = 
+    case (Str.span (/='\n') s) of
+        (xs,ys) -> text xs <> string ys
 
 bool :: Bool -> Doc
-bool b          = text (show b)
+bool b          = text (fromString (show b))
 
 -- | The document @(int i)@ shows the literal integer @i@ using
 -- 'text'.
 int :: Int -> Doc
-int i           = text (show i)
+int i           = text (fromString (show i))
 
 -- | The document @(integer i)@ shows the literal integer @i@ using
 -- 'text'.
 integer :: Integer -> Doc
-integer i       = text (show i)
+integer i       = text (fromString (show i))
 
 -- | The document @(float f)@ shows the literal float @f@ using
 -- 'text'.
 float :: Float -> Doc
-float f         = text (show f)
+float f         = text (fromString (show f))
 
 -- | The document @(double d)@ shows the literal double @d@ using
 -- 'text'.
 double :: Double -> Doc
-double d        = text (show d)
+double d        = text (fromString (show d))
 
 -- | The document @(rational r)@ shows the literal rational @r@ using
 -- 'text'.
 rational :: Rational -> Doc
-rational r      = text (show r)
+rational r      = text (fromString (show r))
 
 
 -----------------------------------------------------------
@@ -519,7 +525,7 @@ instance Pretty Bool where
 
 instance Pretty Char where
   pretty c      = char c
-  prettyList s  = string s
+  prettyList s  = string (fromString s)
 
 instance Pretty Int where
   pretty i      = int i
@@ -693,7 +699,7 @@ align d         = column (\k ->
 -- @
 data Doc        = Empty
                 | Char Char             -- invariant: char is not '\n'
-                | Text !Int String      -- invariant: text doesn't contain '\n'
+                | Text !Int Str         -- invariant: text doesn't contain '\n'
                 | Line !Bool            -- True <=> when undone by group, do not insert a space
                 | Cat Doc Doc
                 | Nest !Int Doc
@@ -712,7 +718,7 @@ data Doc        = Empty
 -- function from a @SimpleDoc@ to your own output format.
 data SimpleDoc  = SEmpty
                 | SChar Char SimpleDoc
-                | SText !Int String SimpleDoc
+                | SText !Int Str SimpleDoc
                 | SLine !Int SimpleDoc
 
 
@@ -733,9 +739,9 @@ char c          = Char c
 -- string shouldn't contain any newline (@'\n'@) characters. If the
 -- string contains newline characters, the function 'string' should be
 -- used.
-text :: String -> Doc
+text :: Str -> Doc
 text ""         = Empty
-text s          = Text (length s) s
+text s          = Text (Str.length s) s
 
 -- | The @line@ document advances to the next line and indents to the
 -- current nesting level. Document @line@ behaves like @(text \" \")@
@@ -895,8 +901,8 @@ renderCompact x
 displayS :: SimpleDoc -> ShowS
 displayS SEmpty             = id
 displayS (SChar c x)        = showChar c . displayS x
-displayS (SText l s x)      = showString s . displayS x
-displayS (SLine i x)        = showString ('\n':indentation i) . displayS x
+displayS (SText l s x)      = showString (Str.unpack s) . displayS x
+displayS (SLine i x)        = showString ('\n' : Str.unpack (indentation i)) . displayS x
 
 
 -- | @(displayIO handle simpleDoc)@ writes @simpleDoc@ to the file
@@ -909,8 +915,8 @@ displayIO handle simpleDoc
     where
       display SEmpty        = return ()
       display (SChar c x)   = do{ hPutChar handle c; display x}
-      display (SText l s x) = do{ hPutStr handle s; display x}
-      display (SLine i x)   = do{ hPutStr handle ('\n':indentation i); display x}
+      display (SText l s x) = do{ Str.hPutStr handle s; display x}
+      display (SLine i x)   = do{ Str.hPutStr handle (Str.cons' '\n' (indentation i)); display x}
 
 
 -----------------------------------------------------------
@@ -954,7 +960,7 @@ hPutDoc handle doc      = displayIO handle (renderPretty 0.4 80 doc)
 -- more trouble than they solve :-)
 -----------------------------------------------------------
 spaces n        | n <= 0    = ""
-                | otherwise = replicate n ' '
+                | otherwise = Str.replicate n ' '
 
 indentation n   = spaces n
 

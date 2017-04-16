@@ -1,0 +1,10 @@
+signature Text.PrettyPrint.Leijen.Str (Str,Chr,Index,null,uncons,span,length,replicate,cons',unpack,hPutStr) where
+
+import Prelude(Int,Char,IO)
+import System.IO(Handle)
+
+data Str
+type Chr = Char
+type Index = Int
+
+hPutStr :: Handle -> Str -> IO ()

@@ -1,4 +1,4 @@
-Name:                wl-pprint
+Name:                wl-pprint-indef
 Version:             1.2
 Cabal-Version:       >=1.6
 Synopsis:            The Wadler/Leijen Pretty Printer
@@ -14,11 +14,12 @@ Maintainer:          Noam Lewis <jones.noamle@gmail.com>
 Build-Type:          Simple
 
 Library
-  Build-Depends:       base < 5
-  Exposed-Modules:     Text.PrettyPrint.Leijen
-  Extensions:          OverlappingInstances
+  Build-Depends:     base < 5,
+                     str-sig >= 0.1.0.0
+  Mixins:            str-sig requires (Str as Text.PrettyPrint.Leijen.Str)
+  Exposed-Modules:   Text.PrettyPrint.Leijen
+  Signatures:        Text.PrettyPrint.Leijen.Str
 
 source-repository head
   type: git
-  location: git@github.com:sinelaw/wl-pprint.git
-
+  location: git@github.com:danidiaz/wl-pprint-indef.git
