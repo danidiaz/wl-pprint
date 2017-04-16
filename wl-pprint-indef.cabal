@@ -14,8 +14,8 @@ Maintainer:          Noam Lewis <jones.noamle@gmail.com>
 Build-Type:          Simple
 
 Executable           wl-pprint-string-example
-  Main-is:           Main.hs
   Hs-Source-Dirs:    example-string
+  Main-is:           Main.hs
   Other-Modules:     StringImpl
   Build-Depends:     base < 5,
                      str-string >= 0.1.0.0,
